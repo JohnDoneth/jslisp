@@ -54,8 +54,9 @@ const betweenCurlyBrackets = between(char("{"))(char("}"));
 const betweenParens = between(char("("))(char(")"));
 
 const newline = choice([char("\n"), str("\r\n")]);
+const commentParser = sequenceOf([char(";"), many(anythingExcept(newline))]);
 
-const whitespaceAndLines = many(choice([whitespace, newline]));
+const whitespaceAndLines = many(choice([commentParser, whitespace, newline]));
 
 const whitespaceSurrounded = between(whitespaceAndLines)(whitespaceAndLines);
 
@@ -73,7 +74,9 @@ export const keywordParser = sequenceOf([
   .map(keywordType);
 
 export const symbolParser = joinedMany1(
-  anyCharExcept(choice([whitespace, char(")"), char("]"), char("}")]))
+  anyCharExcept(
+    choice([whitespace, char(";"), char(")"), char("]"), char("}")])
+  )
 ).map(symbolType);
 
 export const nullParser = str("null")
@@ -101,6 +104,8 @@ export const formParser = recursiveParser(() =>
     ])
   )
 );
+
+export const manyFormsParser = many(formParser);
 
 export const listParser = betweenParens(
   many(whitespaceSurrounded(formParser))

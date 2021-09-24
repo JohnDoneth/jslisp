@@ -1,32 +1,59 @@
-// import commander from "commander";
+import commander from "commander";
 import readline from "readline";
+import fs from "fs";
 import { formParser } from "./parser.mjs";
-import { transpile } from "./transpiler.mjs";
+import { compileSource } from "./transpiler.mjs";
 
-// const program = new commander.Command();
+const program = new commander.Command();
 
-// program
-//   .option("-d, --debug", "output extra debugging")
-//   .option("-s, --small", "small pizza size")
-//   .option("-p, --pizza-type <type>", "flavour of pizza");
+program.option(
+  "-o, --output <file>",
+  "output JavaScript to a file instead of evaluating it."
+);
 
-// program.parse(process.argv);
+program.parse(process.argv);
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: "OHAI> ",
-});
+const options = program.opts();
 
-rl.prompt();
+//console.log(program);
 
-rl.on("line", (line) => {
-  console.log(formParser.run(line).result);
-
-  transpile(formParser.run(line));
+if (program.args == []) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: "> ",
+  });
 
   rl.prompt();
-}).on("close", () => {
-  console.log("Bye!");
-  process.exit(0);
-});
+
+  rl.on("line", (line) => {
+    let compileResult = compileSource(line);
+
+    console.log(`JS:\n${compileResult}`);
+
+    if (compileResult) {
+      console.log(eval(compileResult));
+    }
+
+    rl.prompt();
+  }).on("close", () => {
+    console.log("Bye!");
+    process.exit(0);
+  });
+} else {
+  let file = program.args[0];
+
+  try {
+    const data = fs.readFileSync(file, "utf8");
+
+    let javaScript = compileSource(data);
+
+    if (options.output) {
+      fs.writeFileSync(options.output, javaScript);
+    } else {
+      console.log(eval(javaScript));
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
