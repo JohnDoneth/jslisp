@@ -1,4 +1,19 @@
 
+(const x (quote 2))
+(const x (quote false))
+(const x (quote symbol))
+;(const x (quote :keyword))
+(const x (quote "string"))
+
+(const x (quote [1 2]))
+
+;(const x (quote [1 2]))
+(const x (quote {a 2 b 2}))
+
+(const x (quote (console.log)))
+
+(const x (quote (Number.isInteger type.value)))
+
 ; import commander from "commander";
 ;; (import commander :from "commander")
 
@@ -13,13 +28,16 @@
 ;;      :type "Boolean"
 ;;      :value (Number.isInteger type.value)})
 
-(macro int? [type] (quote (Number.isInteger type.value)))
+;(const x (quote (Number.isInteger 42)))
+
+(macro int? [type] 
+  {type "Boolean" value (Number.isInteger type.value)})
  
 
 (console.log (int? "a"))
 (console.log (int? 42))
 
-(== (int? 42) false)
+;; (== (int? 42) false)
 
 ;(quote "hello")
 

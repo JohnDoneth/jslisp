@@ -83,46 +83,71 @@ const mapValues = (obj, fn) =>
 // Unquote takes a Lisp form and turns it into the compiler representation as a
 // JavaScript object. Kind-of the opposite of compile.
 const quoteMacro = (form) => {
-  return form;
+  // return {
+  //   type: "Object",
+  //   value: [
+  //     { type: "Keyword", value: "type" },
+  //     { type: "String", value: "Boolean" },
+  //     { type: "Keyword", value: "value" },
+  //     { type: "Boolean", value: false },
+  //   ],
+  // };
 
-  //return { type: "Number", value: 2 };
-
-  function simpleWrap(form) {
-    return JSON.parse(
-      JSON.stringify({ type: form.type, value: `${form.value}` })
-    );
-  }
-
-  function containerWrap(form, type) {
+  function wrapper(form) {
     return {
-      type: form.type,
-      value: form.value.map((x) => quoteMacro(x)),
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: form.type },
+        { type: "Keyword", value: "value" },
+        { type: form.type, value: form.value },
+      ],
     };
   }
 
+  function containerWrap(form) {
+    const newForm = {
+      type: form.type,
+      value: form.value.map((x) => x),
+    };
+
+    return wrapper(newForm);
+  }
+
+  function objectWrap(form) {
+    const pairs = form.value.reduce(function (result, _value, index, array) {
+      if (index % 2 === 0) result.push(array.slice(index, index + 2));
+      return result;
+    }, []);
+
+    const mappedValues = pairs.map(([k, v]) => [k, quoteMacro(v)]).flat();
+
+    const newForm = {
+      type: form.type,
+      value: mappedValues,
+    };
+
+    return wrapper(newForm);
+  }
+
   if (form.type === "String") {
-    return simpleWrap(form);
+    return wrapper(form);
   } else if (form.type === "Boolean") {
-    return simpleWrap(form);
+    return wrapper(form);
   } else if (form.type === "Number") {
-    return simpleWrap(form);
+    return wrapper(form);
   } else if (form.type === "Symbol") {
-    return simpleWrap(form);
+    return wrapper(form);
   } else if (form.type === "Keyword") {
-    return simpleWrap(form);
+    return wrapper(form);
   } else if (form.type === "Null") {
-    return simpleWrap(form);
+    return wrapper(form);
   } else if (form.type === "Array") {
     return containerWrap(form);
   } else if (form.type === "Object") {
-    let x = containerWrap(form);
-
-    console.log({ x: x });
-
-    return x;
+    return objectWrap(form);
   } else if (form.type === "List") {
-    let x = containerWrap(form);
-    return x;
+    return containerWrap(form);
   }
 };
 
@@ -145,6 +170,8 @@ const compileMacro = (macro, list, env) => {
   const macroResult = macro(...args);
 
   console.log({ macroResult: macroResult });
+
+  console.log({ compiledMacroResult: compile(macroResult, env) });
 
   return compile(macroResult, env);
 };
@@ -316,7 +343,11 @@ const compileList = (list, env) => {
         return compileCall(list, env);
       }
     } else {
-      throw { error: "Expected a symbol when evaluating list" };
+      console.log(list.value[0].value);
+
+      throw {
+        error: `Expected a symbol when evaluating list, got ${list.value[0].type} instead.`,
+      };
     }
   } else {
     throw { error: "Empty lists are not supported" };
@@ -379,8 +410,8 @@ const compileObject = (object, env) => {
           key?.type === "Symbol" ||
           key?.type === "String",
         `Keys to objects need to be keywords, symbols, or strings. Got ${JSON.stringify(
-          object
-        )}`
+          key?.type
+        )} in ${JSON.stringify(object)}`
       );
 
       return `${key.value}: ${compile(value, env)[0]}`;
@@ -470,7 +501,7 @@ export const compileSource = (source, env) => {
       { output: [], env: env }
     );
 
-    const javaScript = result2.output.join(";\n");
+    const javaScript = result2.output.filter((x) => x != "").join(";\n");
 
     return [javaScript, env];
   } else {

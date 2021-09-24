@@ -68,7 +68,11 @@ export const booleanParser = choice([str("true"), str("false")])
 
 export const keywordParser = sequenceOf([
   char(":"),
-  joinedMany1(anyCharExcept(whitespace)),
+  joinedMany1(
+    anyCharExcept(
+      choice([whitespace, char(";"), char(")"), char("]"), char("}")])
+    )
+  ),
 ])
   .map((x) => x[1])
   .map(keywordType);
@@ -99,8 +103,8 @@ export const formParser = recursiveParser(() =>
       arrayParser,
       objectParser,
       listParser,
-      keywordParser,
       symbolParser,
+      keywordParser,
     ])
   )
 );
