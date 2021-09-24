@@ -1,15 +1,19 @@
 import commander from "commander";
 import readline from "readline";
 import fs from "fs";
-import { formParser } from "./parser.mjs";
-import { compileSource } from "./transpiler.mjs";
+import { compileSource, defaultEnvironment } from "./transpiler.mjs";
 
 const program = new commander.Command();
 
-program.option(
-  "-o, --output <file>",
-  "output JavaScript to a file instead of evaluating it."
-);
+program
+  .option(
+    "-o, --output <file>",
+    "output JavaScript to a file instead of evaluating it."
+  )
+  .option(
+    "-r, --repl",
+    "start a repl even if there is a file being used as input."
+  );
 
 program.parse(process.argv);
 
@@ -17,7 +21,30 @@ const options = program.opts();
 
 //console.log(program);
 
-if (program.args == []) {
+let env = defaultEnvironment();
+
+if (program.args.length != 0) {
+  let file = program.args[0];
+
+  try {
+    const data = fs.readFileSync(file, "utf8");
+
+    let [javaScript, newEnv] = compileSource(data, env);
+    env = newEnv;
+
+    if (options.output) {
+      fs.writeFileSync(options.output, javaScript);
+    } else {
+      console.log(`JS:\n${javaScript}`);
+
+      console.log(eval(javaScript));
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+if (program.args.length == 0 || options.repl) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -27,7 +54,8 @@ if (program.args == []) {
   rl.prompt();
 
   rl.on("line", (line) => {
-    let compileResult = compileSource(line);
+    let [compileResult, newEnv] = compileSource(line, env);
+    env = newEnv;
 
     console.log(`JS:\n${compileResult}`);
 
@@ -40,20 +68,4 @@ if (program.args == []) {
     console.log("Bye!");
     process.exit(0);
   });
-} else {
-  let file = program.args[0];
-
-  try {
-    const data = fs.readFileSync(file, "utf8");
-
-    let javaScript = compileSource(data);
-
-    if (options.output) {
-      fs.writeFileSync(options.output, javaScript);
-    } else {
-      console.log(eval(javaScript));
-    }
-  } catch (err) {
-    console.error(err);
-  }
 }

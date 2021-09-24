@@ -13,7 +13,5 @@ test("transpiler - function calls", (t) => {
 test("transpiler", (t) => {
   const result = compile("(console.log 2 4)");
 
-  
-
   t.is(result, "console.log(2, 4)");
 });
