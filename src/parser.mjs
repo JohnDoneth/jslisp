@@ -2,31 +2,25 @@ import {
   choice,
   sequenceOf,
   char,
-  regex,
   digits,
-  anyOfString,
   whitespace,
   str,
   many,
   many1,
   between,
-  possibly,
   anythingExcept,
   anyCharExcept,
-  pipeParsers,
   recursiveParser,
 } from "arcsecond";
 
 const makeBasicType = (typeName) => (value) => ({
   type: typeName,
   value,
-  toString: () => `${typeName}(${value})`,
 });
 
 const makeMultiType = (typeName) => (values) => ({
   type: typeName,
   value: values,
-  toString: () => `${typeName}(${values.map((v) => v.toString()).join(", ")})`,
 });
 
 // Types
@@ -103,8 +97,8 @@ export const formParser = recursiveParser(() =>
       arrayParser,
       objectParser,
       listParser,
-      symbolParser,
       keywordParser,
+      symbolParser,
     ])
   )
 );
