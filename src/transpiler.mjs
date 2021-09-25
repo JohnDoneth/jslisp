@@ -19,6 +19,14 @@ const SPECIAL_FORMS = [
   "import",
 ];
 
+const pairsOf = (reducable) => {
+  const pairs = reducable.reduce(function (result, _value, index, array) {
+    if (index % 2 === 0) result.push(array.slice(index, index + 2));
+    return result;
+  }, []);
+  return pairs;
+};
+
 // Quote takes a Lisp form and turns it into the compiler representation as a
 // JavaScript object. Kind-of the opposite of compile.
 export const quoteMacro = (form) => {
@@ -53,12 +61,15 @@ export const quoteMacro = (form) => {
       .map(([k, v]) => [quoteMacro(k), quoteMacro(v)])
       .flat();
 
-    const newForm = {
-      type: form.type,
-      value: mappedValues,
+    return {
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: "Object" },
+        { type: "Keyword", value: "value" },
+        { type: "Array", value: mappedValues },
+      ],
     };
-
-    return wrapper(newForm);
   }
 
   if (form.type === "String") {
@@ -287,6 +298,14 @@ const compileKeyword = (keyword, env) => {
   return [`${keyword.value}`, env];
 };
 
+const compileDown = (form) => {
+  if (form.type) {
+    return compile(form);
+  } else {
+    return form;
+  }
+};
+
 const compileObject = (object, env) => {
   assert(object?.type === "Object", `Got ${JSON.stringify(object)}`);
 
@@ -313,13 +332,29 @@ const compileObject = (object, env) => {
       //   )} in ${JSON.stringify(object)}`
       // );
 
-      console.log(value);
+      key = compile(key, env)[0];
 
-      console.log(compile(value, env)[0]);
+      if (
+        key.type === "Keyword" ||
+        key.type === "Symbol" ||
+        key.type === "String"
+      ) {
+        throw new Error(
+          "Keys to objects need to be keywords, symbols, or strings"
+        );
+      }
 
-      return `${compile(key, env)[0]}: ${compile(value, env)[0]}`;
+      value = compile(value, env)[0];
+
+      let res = `${key}: ${value}`;
+
+      //console.log({ compileResult: res });
+
+      return res;
     })
     .join(", ");
+
+  //console.log({ finalRes: `{${inner}}` });
 
   return [`{${inner}}`, env];
 };

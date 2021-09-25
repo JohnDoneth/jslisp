@@ -439,6 +439,81 @@ test("quote returns an object representing an array", (t) => {
   });
 });
 
+test("quote returns an object representing an object", (t) => {
+  let x = quoteMacro({
+    type: "Object",
+    value: [
+      { type: "Symbol", value: "key" },
+      { type: "String", value: "value" },
+    ],
+  });
+
+  t.deepEqual(x, {
+    type: "Object",
+    value: [
+      {
+        type: "Keyword",
+        value: "type",
+      },
+      {
+        type: "String",
+        value: "Object",
+      },
+      {
+        type: "Keyword",
+        value: "value",
+      },
+      {
+        type: "Array",
+        value: [
+          {
+            type: "Object",
+            value: [
+              {
+                type: "Keyword",
+                value: "type",
+              },
+              {
+                type: "String",
+                value: "Symbol",
+              },
+              {
+                type: "Keyword",
+                value: "value",
+              },
+              {
+                type: "Symbol",
+                value: "key",
+              },
+            ],
+          },
+          {
+            type: "Object",
+            value: [
+              {
+                type: "Keyword",
+                value: "type",
+              },
+              {
+                type: "String",
+                value: "String",
+              },
+              {
+                type: "Keyword",
+                value: "value",
+              },
+              {
+                type: "String",
+                value: "value",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+});
+
 test("quote is the inverse of compile", (t) => {
   let input = {
     type: "Array",
@@ -454,7 +529,7 @@ test("quote is the inverse of compile", (t) => {
   t.deepEqual(input, eval(`(${output})`));
 });
 
-test("quote is the inverse of compile with objects", (t) => {
+test("compile works with object representations", (t) => {
   let input = {
     type: "Object",
     value: [
@@ -463,9 +538,53 @@ test("quote is the inverse of compile with objects", (t) => {
     ],
   };
 
-  let [output, _env] = compile(quoteMacro(input));
+  let [output, _env] = compile(input);
 
-  console.log(output);
+  t.deepEqual(output, "{a: 2}");
+});
+
+test("compile works with nested object representations", (t) => {
+  let input = {
+    type: "Object",
+    value: [
+      { type: "Keyword", value: "a" },
+      {
+        type: "Object",
+        value: [
+          { type: "Keyword", value: "b" },
+          { type: "Number", value: 2 },
+        ],
+      },
+    ],
+  };
+
+  let [output, _env] = compile(input);
+
+  t.deepEqual(output, "{a: {b: 2}}");
+});
+
+test("quote is the inverse of nested object representations", (t) => {
+  let input = compileSource("(quote {:a 2})")[0];
+
+  t.is(
+    `{type: "Object", value: [{type: "Keyword", value: a}, {type: "Number", value: 2}]}`,
+    input
+  );
+});
+
+// Round-trip through the compiler! :-)
+test("quote is the inverse of compile with objects", (t) => {
+  let input = {
+    type: "Object",
+    value: [
+      { type: "String", value: "a" },
+      { type: "Number", value: 2 },
+    ],
+  };
+
+  let [output, _env] = compile(quoteMacro(input));
 
   t.deepEqual(input, eval(`(${output})`));
 });
+
+// {:type "Object" :value {:type "Array" :value [1 2 3]}}
