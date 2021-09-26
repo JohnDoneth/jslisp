@@ -74,7 +74,7 @@ export const quasiquoteMacro = (form, unquote) => {
 
   function listWrap(form) {
     if (form.value[0].type === "Symbol" && form.value[0].value == "unquote") {
-      return quasiquoteMacro(form.value[1], true);
+      return form.value[1];
     } else {
       const mappedValues = form.value.map((x) => quasiquoteMacro(x));
 
@@ -365,18 +365,6 @@ const compileSpecialForm = (form, env) => {
     console.log({ macroSource: macroSource });
 
     env.macros[identifier] = eval(macroSource);
-
-    // TODO
-    // {
-    //   type: 'List',
-    //   value: [
-    //   { type: 'Symbol', value: [Function: isInteger] }, <--- This is
-    //   incorrect. The Symbol should be a string. It being a function is
-    //   messing up the code generation.
-    //   Ex: "function isInteger() { [native code] }(a)"
-    //     { type: 'Symbol', value: '42' }
-    //   ]
-    // }
 
     return [``, env];
   } else {

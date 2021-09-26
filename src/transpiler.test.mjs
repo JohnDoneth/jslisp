@@ -618,8 +618,8 @@ test("quote is the inverse of compile with arrays", (t) => {
 test("quasiquote works", (t) => {
   let [output, _env] = compileSource(
     `
-  (macro int? [type] 
-    (quasiquote (Number.isInteger (unquote type.value))))
+  (macro int? [value] 
+    (quasiquote (Number.isInteger (unquote value))))
 
   (int? 42)
   `

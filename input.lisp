@@ -25,15 +25,16 @@
 ;; (macro int? [type]
 ;;     {
 ;;      :type "Boolean"
-;;      :value (Number.isInteger type.value)})
+;;      :value (Number.isInteger type)})
 
 ;(const x (quote (Number.isInteger 42)))
 
-(macro int? [type] 
-  {type "Boolean" value (Number.isInteger type.value)})
+(macro string? [type] 
+  (quasiquote (== (typeof (unquote type)) "string")))
+
 
 (macro int? [type] 
-  (quasiquote (Number.isInteger (unquote type.value))))
+  (quasiquote (Number.isInteger (unquote type))))
 
 
 (console.log (int? "a"))
@@ -41,8 +42,9 @@
 
 (const log (fn [x] (console.log x)))
 
-(log 42)
-(log {"a" 2})
+(log (string? "hello"))
+(log (string? {:a "2"}))
+ 
 
 ;; (== (int? 42) false)
 
