@@ -614,3 +614,16 @@ test("quote is the inverse of compile with arrays", (t) => {
 
   t.deepEqual(input, eval(`(${output})`));
 });
+
+test("quasiquote works", (t) => {
+  let [output, _env] = compileSource(
+    `
+  (macro int? [type] 
+    (quasiquote (Number.isInteger (unquote type.value))))
+
+  (int? 42)
+  `
+  );
+
+  t.is(output, `Number.isInteger(42)`);
+});

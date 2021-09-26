@@ -6,7 +6,6 @@ const OPERATORS = ["%", "+", "-", "*", "/", "==", "===", "<", "<=", ">", ">="];
 
 // Forms reserved by the compiler.
 const SPECIAL_FORMS = [
-  "unquote",
   "macro",
   "macroexpand",
   "do",
@@ -25,6 +24,112 @@ const pairsOf = (reducable) => {
     return result;
   }, []);
   return pairs;
+};
+
+// Like `quote` but supports `unquote`'ing (interpolating) expressions inside.
+export const quasiquoteMacro = (form, unquote) => {
+  unquote = unquote || false;
+
+  console.log({ quasiquote: JSON.stringify(form) });
+
+  function wrapper(form) {
+    return {
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: form.type },
+        { type: "Keyword", value: "value" },
+        { type: form.type, value: form.value },
+      ],
+    };
+  }
+
+  function stringWrapper(form) {
+    let v;
+    if (unquote) {
+      v = form.value;
+    } else {
+      v = `"${form.value}"`;
+    }
+
+    return {
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: form.type },
+        { type: "Keyword", value: "value" },
+        { type: form.type, value: v },
+      ],
+    };
+  }
+
+  function containerWrap(form) {
+    const newForm = {
+      type: form.type,
+      value: form.value.map((x) => quasiquoteMacro(x)),
+    };
+
+    return wrapper(newForm);
+  }
+
+  function listWrap(form) {
+    if (form.value[0].type === "Symbol" && form.value[0].value == "unquote") {
+      return quasiquoteMacro(form.value[1], true);
+    } else {
+      const mappedValues = form.value.map((x) => quasiquoteMacro(x));
+
+      return {
+        type: "Object",
+        value: [
+          { type: "Keyword", value: "type" },
+          { type: "String", value: "List" },
+          { type: "Keyword", value: "value" },
+          { type: "Array", value: mappedValues },
+        ],
+      };
+    }
+  }
+
+  function objectWrap(form) {
+    const pairs = form.value.reduce(function (result, _value, index, array) {
+      if (index % 2 === 0) result.push(array.slice(index, index + 2));
+      return result;
+    }, []);
+
+    const mappedValues = pairs
+      .map(([k, v]) => [quasiquoteMacro(k), quasiquoteMacro(v)])
+      .flat();
+
+    return {
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: "Object" },
+        { type: "Keyword", value: "value" },
+        { type: "Array", value: mappedValues },
+      ],
+    };
+  }
+
+  if (form.type === "String") {
+    return wrapper(form);
+  } else if (form.type === "Boolean") {
+    return wrapper(form);
+  } else if (form.type === "Number") {
+    return wrapper(form);
+  } else if (form.type === "Symbol") {
+    return stringWrapper(form);
+  } else if (form.type === "Keyword") {
+    return stringWrapper(form);
+  } else if (form.type === "Null") {
+    return wrapper(form);
+  } else if (form.type === "Array") {
+    return containerWrap(form);
+  } else if (form.type === "Object") {
+    return objectWrap(form);
+  } else if (form.type === "List") {
+    return listWrap(form);
+  }
 };
 
 // Quote takes a Lisp form and turns it into the compiler representation as a
@@ -49,7 +154,7 @@ export const quoteMacro = (form) => {
         { type: "Keyword", value: "type" },
         { type: "String", value: form.type },
         { type: "Keyword", value: "value" },
-        { type: form.type, value: `"${form.value}"` },
+        { type: form.type, value: `${form.value}` },
       ],
     };
   }
@@ -140,7 +245,7 @@ const compileMacro = (macro, list, env) => {
 
   let [output, newEnv] = compile(macroResult, env);
 
-  return [`(${output})`, newEnv];
+  return [`${output}`, newEnv];
 };
 
 const compileCall = (list, env) => {
@@ -260,8 +365,6 @@ const compileSpecialForm = (form, env) => {
     console.log({ macroSource: macroSource });
 
     env.macros[identifier] = eval(macroSource);
-
-    console.log(env.macros["int?"]({ type: "Number", value: "42" }));
 
     // TODO
     // {
@@ -431,6 +534,7 @@ export const defaultEnvironment = () => {
   return {
     macros: {
       quote: quoteMacro,
+      quasiquote: quasiquoteMacro,
     },
   };
 };

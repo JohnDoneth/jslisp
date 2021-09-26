@@ -33,8 +33,7 @@
   {type "Boolean" value (Number.isInteger type.value)})
 
 (macro int? [type] 
-  (const value (Number.isInteger type.value))
-  (quote (Number.isInteger (unquote type.value))))
+  (quasiquote (Number.isInteger (unquote type.value))))
 
 
 (console.log (int? "a"))
