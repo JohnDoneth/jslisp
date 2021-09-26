@@ -29,21 +29,53 @@
 
 ;(const x (quote (Number.isInteger 42)))
 
-(macro string? [type] 
-  (quasiquote (== (typeof (unquote type)) "string")))
 
+(macro bool? [x] 
+  "Check if x is a boolean."
+  (quasiquote (== (typeof (unquote x)) "boolean")))
 
-(macro int? [type] 
-  (quasiquote (Number.isInteger (unquote type))))
+(macro object? [x] 
+  "Check if x is an object."
+  (quasiquote (== (typeof (unquote x)) "object")))
 
+(macro number? [x] 
+  "Check if x is a number."
+  (quasiquote (== (typeof (unquote x)) "number")))
 
-(console.log (int? "a"))
-(console.log (int? 42))
+(macro function? [x] 
+  "Check if x is a function."
+  (quasiquote (== (typeof (unquote x)) "function")))
 
-(const log (fn [x] (console.log x)))
+(macro int? [x] 
+  "Check if x is an integer."
+  (quasiquote (Number.isInteger (unquote x))))
+
+(macro float? [x] 
+  "Check if x is a float."
+  (quasiquote (! (int? (unquote x)))))
+
+(macro array? [x] 
+  "Check if x is an array."
+  (quasiquote (Array.isArray (unquote x))))
+
+(macro string? [x] 
+  "Check if x is a string."
+  (quasiquote (== (typeof (unquote x)) "string")))
+
+(macro defn [name args body]
+    "Define a function"
+    (quasiquote (const (unquote name) (fn (unquote args) (unquote body)))))
+
+(defn log [x] 
+    (console.log x) 
+    (console.log x))
+
 
 (log (string? "hello"))
 (log (string? {:a "2"}))
+
+
+;(const x (fn [a b & rest] 42))
  
 
 ;; (== (int? 42) false)

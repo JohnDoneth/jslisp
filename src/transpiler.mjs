@@ -2,7 +2,23 @@ import { manyFormsParser } from "./parser.mjs";
 import assert from "assert";
 
 // Operators reserved by the compiler.
-const OPERATORS = ["%", "+", "-", "*", "/", "==", "===", "<", "<=", ">", ">="];
+const OPERATORS = [
+  "%",
+  "+",
+  "-",
+  "*",
+  "/",
+  "==",
+  "===",
+  "!=",
+  "!==",
+  "<",
+  "<=",
+  ">",
+  ">=",
+  "&&",
+  "||",
+];
 
 // Forms reserved by the compiler.
 const SPECIAL_FORMS = [
@@ -30,7 +46,7 @@ const pairsOf = (reducable) => {
 export const quasiquoteMacro = (form, unquote) => {
   unquote = unquote || false;
 
-  console.log({ quasiquote: JSON.stringify(form) });
+  //console.log({ quasiquote: JSON.stringify(form) });
 
   function wrapper(form) {
     return {
@@ -362,7 +378,7 @@ const compileSpecialForm = (form, env) => {
 
     const [macroSource, newEnv] = compileFunction(form.value.slice(2), env);
 
-    console.log({ macroSource: macroSource });
+    //console.log({ macroSource: macroSource });
 
     env.macros[identifier] = eval(macroSource);
 
@@ -378,6 +394,14 @@ const compileList = (list, env) => {
   if (list.value[0] != null) {
     if (list.value[0].type == "Symbol") {
       if (OPERATORS.includes(list.value[0].value)) {
+        assert(
+          list?.value.length >= 3,
+          `The '${
+            list.value[0].value
+          }' operator requires at least two arguments. Got ${
+            list.value.length - 1
+          }`
+        );
         return compileOp(list, env);
       } else if (SPECIAL_FORMS.includes(list.value[0].value)) {
         return compileSpecialForm(list, env);

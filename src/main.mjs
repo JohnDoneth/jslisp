@@ -54,19 +54,23 @@ if (program.args.length == 0 || options.repl) {
   rl.prompt();
 
   rl.on("line", (line) => {
-    let [compileResult, newEnv] = compileSource(line, env);
-    env = newEnv;
+    try {
+      let [compileResult, newEnv] = compileSource(line, env);
+      env = newEnv;
 
-    console.log(`JS:\n${compileResult}`);
+      console.log(`JS:\n${compileResult}`);
 
-    if (compileResult) {
-      try {
-        console.log(eval(compileResult));
-      } catch (e) {
-        console.error(
-          `Invalid JavaScript generated. Error during evaluation: ${e}`
-        );
+      if (compileResult) {
+        try {
+          console.log(eval(compileResult));
+        } catch (e) {
+          console.error(
+            `Invalid JavaScript generated. Error during evaluation: ${e}`
+          );
+        }
       }
+    } catch (e) {
+      console.error(`Failed to compile: ${e}`);
     }
 
     rl.prompt();
