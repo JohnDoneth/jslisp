@@ -378,7 +378,7 @@ const compileSpecialForm = (form, env) => {
 
     const [macroSource, newEnv] = compileFunction(form.value.slice(2), env);
 
-    //console.log({ macroSource: macroSource });
+    console.log({ macroSource: macroSource });
 
     env.macros[identifier] = eval(macroSource);
 

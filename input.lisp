@@ -62,9 +62,10 @@
   "Check if x is a string."
   (quasiquote (== (typeof (unquote x)) "string")))
 
-(macro defn [name args body]
+(macro defn [name args ...body]
     "Define a function"
-    (quasiquote (const (unquote name) (fn (unquote args) (unquote body)))))
+    (console.log body)
+    (quasiquote (const (unquote name) (fn (unquote args) (unquote ...body)))))
 
 (defn log [x] 
     (console.log x) 
@@ -75,7 +76,11 @@
 (log (string? {:a "2"}))
 
 
-;(const x (fn [a b & rest] 42))
+(const x (fn [a b ...rest] rest))
+
+
+(log (x 1 2))
+(log (x 1 2 3 4))
  
 
 ;; (== (int? 42) false)
