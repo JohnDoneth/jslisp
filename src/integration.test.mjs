@@ -12,6 +12,22 @@ function run(source) {
   return eval(javaScript);
 }
 
+test("case - throws when dispatch is missing", (t) => {
+  const error = t.throws(() => {
+    run(`(case)`);
+  });
+
+  t.like(error, { message: "case expression is missing a dispatch value." });
+});
+
+test("case - throws when the pairs is empty", (t) => {
+  const error = t.throws(() => {
+    run(`(case true)`);
+  });
+
+  t.like(error, { message: "case expressions require at least one pair." });
+});
+
 test("case - matching works 1", (t) => {
   const result = run(`
     (const y 42)

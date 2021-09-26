@@ -10,7 +10,6 @@ const x = (function(a, b, ...rest) {
 log(x(1, 2));
 log(x(1, 2, 3, 4));
 const y = "hello";
-
 (function () {
 	let __dispatch__ = typeof(y);
 	if (__dispatch__ == "number") { return "it's a number!"; }

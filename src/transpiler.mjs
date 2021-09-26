@@ -382,10 +382,16 @@ const compileSpecialForm = (form, env) => {
 
     return [`throw ${rightHand}`, newEnv];
   } else if (first == "case") {
-    let dispatch = compile(form.value[1], env)[0];
-    let pairs = form.value.slice(2);
+    if (form.value.length === 1) {
+      throw new Error("case expression is missing a dispatch value.");
+    }
+    if (form.value.length < 4) {
+      throw new Error("case expressions require at least one pair.");
+    }
 
-    let oddArgs = pairs.length % 2 !== 0;
+    const dispatch = compile(form.value[1], env)[0];
+    let pairs = form.value.slice(2);
+    const oddArgs = pairs.length % 2 !== 0;
 
     let defaultCase = null;
     if (oddArgs) {
@@ -393,22 +399,9 @@ const compileSpecialForm = (form, env) => {
       defaultCase = compile(last, env)[0]; // remove last expression
     }
 
-    console.log({ defaultCase: defaultCase });
-
-    console.log({ oddArgs: oddArgs });
-
     const dispatchStmt = `\n\tlet __dispatch__ = ${dispatch};`;
 
-    pairs = pairs.reduce(function (result, _value, index, array) {
-      if (index % 2 === 0) result.push(array.slice(index, index + 2));
-      return result;
-    }, []);
-
-    console.log({ pairs: pairs });
-
-    let body = pairs.reduce(function (prev, [key, value]) {
-      console.log(value);
-
+    const body = pairsOf(pairs).reduce(function (prev, [key, value]) {
       key = compile(key, env)[0];
       value = compile(value, env)[0];
 
@@ -428,11 +421,9 @@ const compileSpecialForm = (form, env) => {
       defaultStmt = `\n\telse { return ${defaultCase}; }`;
     }
 
-    console.log({ body: body });
+    const caseExpr = `(function () {${dispatchStmt + body + defaultStmt}\n})()`;
 
-    body = `\n(function () {${dispatchStmt + body + defaultStmt}\n})()`;
-
-    return [body, env];
+    return [caseExpr, env];
   } else {
     throw { error: "Unimplemented special form" };
   }
