@@ -42,6 +42,18 @@ export const quoteMacro = (form) => {
     };
   }
 
+  function stringWrapper(form) {
+    return {
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: form.type },
+        { type: "Keyword", value: "value" },
+        { type: form.type, value: `"${form.value}"` },
+      ],
+    };
+  }
+
   function containerWrap(form) {
     const newForm = {
       type: form.type,
@@ -49,6 +61,20 @@ export const quoteMacro = (form) => {
     };
 
     return wrapper(newForm);
+  }
+
+  function listWrap(form) {
+    let mappedValues = form.value.map((x) => quoteMacro(x));
+
+    return {
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: "List" },
+        { type: "Keyword", value: "value" },
+        { type: "Array", value: mappedValues },
+      ],
+    };
   }
 
   function objectWrap(form) {
@@ -79,9 +105,9 @@ export const quoteMacro = (form) => {
   } else if (form.type === "Number") {
     return wrapper(form);
   } else if (form.type === "Symbol") {
-    return wrapper(form);
+    return stringWrapper(form);
   } else if (form.type === "Keyword") {
-    return wrapper(form);
+    return stringWrapper(form);
   } else if (form.type === "Null") {
     return wrapper(form);
   } else if (form.type === "Array") {
@@ -89,7 +115,7 @@ export const quoteMacro = (form) => {
   } else if (form.type === "Object") {
     return objectWrap(form);
   } else if (form.type === "List") {
-    return containerWrap(form);
+    return listWrap(form);
   }
 };
 
@@ -112,7 +138,9 @@ const compileMacro = (macro, list, env) => {
   //console.log({ macroResult: macroResult });
   //console.log({ compiledMacroResult: compile(macroResult, env) });
 
-  return compile(macroResult, env);
+  let [output, newEnv] = compile(macroResult, env);
+
+  return [`(${output})`, newEnv];
 };
 
 const compileCall = (list, env) => {
@@ -229,7 +257,23 @@ const compileSpecialForm = (form, env) => {
 
     const [macroSource, newEnv] = compileFunction(form.value.slice(2), env);
 
+    console.log({ macroSource: macroSource });
+
     env.macros[identifier] = eval(macroSource);
+
+    console.log(env.macros["int?"]({ type: "Number", value: "42" }));
+
+    // TODO
+    // {
+    //   type: 'List',
+    //   value: [
+    //   { type: 'Symbol', value: [Function: isInteger] }, <--- This is
+    //   incorrect. The Symbol should be a string. It being a function is
+    //   messing up the code generation.
+    //   Ex: "function isInteger() { [native code] }(a)"
+    //     { type: 'Symbol', value: '42' }
+    //   ]
+    // }
 
     return [``, env];
   } else {
@@ -343,6 +387,8 @@ const compileObject = (object, env) => {
           "Keys to objects need to be keywords, symbols, or strings"
         );
       }
+
+      //console.log({ value: value });
 
       value = compile(value, env)[0];
 

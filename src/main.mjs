@@ -19,7 +19,7 @@ program.parse(process.argv);
 
 const options = program.opts();
 
-//console.log(program);
+console.log(program);
 
 let env = defaultEnvironment();
 
@@ -60,7 +60,13 @@ if (program.args.length == 0 || options.repl) {
     console.log(`JS:\n${compileResult}`);
 
     if (compileResult) {
-      console.log(eval(compileResult));
+      try {
+        console.log(eval(compileResult));
+      } catch (e) {
+        console.error(
+          `Invalid JavaScript generated. Error during evaluation: ${e}`
+        );
+      }
     }
 
     rl.prompt();

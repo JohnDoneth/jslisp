@@ -587,4 +587,30 @@ test("quote is the inverse of compile with objects", (t) => {
   t.deepEqual(input, eval(`(${output})`));
 });
 
-// {:type "Object" :value {:type "Array" :value [1 2 3]}}
+test("quote is the inverse of compile with lists", (t) => {
+  let input = {
+    type: "List",
+    value: [
+      { type: "String", value: "a" },
+      { type: "Number", value: 2 },
+    ],
+  };
+
+  let [output, _env] = compile(quoteMacro(input));
+
+  t.deepEqual(input, eval(`(${output})`));
+});
+
+test("quote is the inverse of compile with arrays", (t) => {
+  let input = {
+    type: "Array",
+    value: [
+      { type: "String", value: "a" },
+      { type: "Number", value: 2 },
+    ],
+  };
+
+  let [output, _env] = compile(quoteMacro(input));
+
+  t.deepEqual(input, eval(`(${output})`));
+});
