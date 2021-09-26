@@ -22,16 +22,18 @@ const OPERATORS = [
 
 // Forms reserved by the compiler.
 const SPECIAL_FORMS = [
-  "macro",
-  "macroexpand",
+  "case",
+  "const",
+  "continue",
   "do",
   "fn",
   "if",
-  "while",
-  "const",
-  "let",
-  "continue",
   "import",
+  "let",
+  "macro",
+  "macroexpand",
+  "throw",
+  "while",
 ];
 
 const pairsOf = (reducable) => {
@@ -354,20 +356,7 @@ const compileSpecialForm = (form, env) => {
 
     return [`(function (){ ${body}\n })()`, env];
   } else if (first == "import") {
-    let rest = form.value
-      .slice(1, -1)
-      .map((x) => compile(x, env)[0])
-      .map((x) => `\n\t${x}`); // indent
-
-    // Last expression in the body needs to "return".
-    let last = form.value
-      .slice(-1)
-      .map((x) => compile(x, env)[0])
-      .map((x) => `\n\treturn ${x}`);
-
-    let body = [...rest, ...last].join(";");
-
-    return [`(function (){ ${body}\n })()`, env];
+    throw { error: "Unimplemented special form" };
   } else if (first == "macro") {
     assert(
       form.value.length >= 3,
@@ -383,6 +372,67 @@ const compileSpecialForm = (form, env) => {
     env.macros[identifier] = eval(macroSource);
 
     return [``, env];
+  } else if (first == "throw") {
+    assert(
+      form.value.length == 2,
+      `throw requires exactly one argument. Got ${form.value.length - 1}`
+    );
+
+    let [rightHand, newEnv] = compile(form.value[1]);
+
+    return [`throw ${rightHand}`, newEnv];
+  } else if (first == "case") {
+    let dispatch = compile(form.value[1], env)[0];
+    let pairs = form.value.slice(2);
+
+    let oddArgs = pairs.length % 2 !== 0;
+
+    let defaultCase = null;
+    if (oddArgs) {
+      const last = pairs.splice(-1)[0];
+      defaultCase = compile(last, env)[0]; // remove last expression
+    }
+
+    console.log({ defaultCase: defaultCase });
+
+    console.log({ oddArgs: oddArgs });
+
+    const dispatchStmt = `\n\tlet __dispatch__ = ${dispatch};`;
+
+    pairs = pairs.reduce(function (result, _value, index, array) {
+      if (index % 2 === 0) result.push(array.slice(index, index + 2));
+      return result;
+    }, []);
+
+    console.log({ pairs: pairs });
+
+    let body = pairs.reduce(function (prev, [key, value]) {
+      console.log(value);
+
+      key = compile(key, env)[0];
+      value = compile(value, env)[0];
+
+      let expr = "else if";
+      if (prev === "") {
+        expr = "if";
+      }
+
+      return [
+        prev,
+        `\t${expr} (__dispatch__ == ${key}) { return ${value}; }`,
+      ].join("\n");
+    }, "");
+
+    let defaultStmt = "\n\telse { return null; }";
+    if (defaultCase) {
+      defaultStmt = `\n\telse { return ${defaultCase}; }`;
+    }
+
+    console.log({ body: body });
+
+    body = `\n(function () {${dispatchStmt + body + defaultStmt}\n})()`;
+
+    return [body, env];
   } else {
     throw { error: "Unimplemented special form" };
   }

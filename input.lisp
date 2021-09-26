@@ -62,8 +62,16 @@
   "Check if x is a string."
   (quasiquote (== (typeof (unquote x)) "string")))
 
+(macro assert! [condition message]
+     (quasiquote 
+        (if (! (unquote condition))
+            (do 
+                (throw (|| (unquote message) "Assertion failed"))
+                0)))) ; Return 0 as a workaround to not being able to throw from the return position.
+
 (macro defn [name args ...body]
     "Define a function"
+    (assert! (== name.type "Symbol") "defn name should be a symbol.")
     (console.log body)
     (quasiquote (const (unquote name) (fn (unquote args) (unquote ...body)))))
 
@@ -76,12 +84,24 @@
 (log (string? {:a "2"}))
 
 
-(const x (fn [a b ...rest] rest))
+(defn x [a b ...rest] rest)
 
+;(defn "hi" [a b ...rest] rest)
+
+
+;(assert! false "message")
 
 (log (x 1 2))
 (log (x 1 2 3 4))
  
+
+(const y "hello")
+
+(case (typeof y)
+    "number" "it's a number!"
+    "string" "it's a string!"
+    )   
+    
 
 ;; (== (int? 42) false)
 
