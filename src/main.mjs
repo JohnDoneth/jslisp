@@ -11,6 +11,10 @@ program
     "output JavaScript to a file instead of evaluating it."
   )
   .option(
+    "-j, --js",
+    "print the compiled JavaScript to the console before evaluating it, in the repl."
+  )
+  .option(
     "-r, --repl",
     "start a repl even if there is a file being used as input."
   );
@@ -58,7 +62,9 @@ if (program.args.length == 0 || options.repl) {
       let [compileResult, newEnv] = compileSource(line, env);
       env = newEnv;
 
-      console.log(`JS:\n${compileResult}`);
+      if (options.js) {
+        console.log(`JS:\n${compileResult}`);
+      }
 
       if (compileResult) {
         try {

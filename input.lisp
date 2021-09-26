@@ -97,11 +97,28 @@
 
 (const y "hello")
 
-(case (typeof y)
-    "number" "it's a number!"
-    "string" "it's a string!"
-    )   
+(defn test [x] 
+    (case (typeof x)
+        "number" "it's a number!"
+        "string" "it's a string!"
+        ))   
     
+(test 2)
+(test "string")
+
+(const z 42)
+
+(case z
+    1 "one!"
+    2 "two!"
+    42 "fourty-two!")
+
+
+(macro odd? [x] 
+    (console.log x)
+    (quote (!= (% x.value 2) 0)))
+
+(odd? 2)
 
 ;; (== (int? 42) false)
 

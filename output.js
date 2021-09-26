@@ -10,9 +10,12 @@ const x = (function(a, b, ...rest) {
 log(x(1, 2));
 log(x(1, 2, 3, 4));
 const y = "hello";
-(function () {
-	let __dispatch__ = typeof(y);
+const test = (function(x) {
+	return (function () {
+	let __dispatch__ = typeof(x);
 	if (__dispatch__ == "number") { return "it's a number!"; }
 	else if (__dispatch__ == "string") { return "it's a string!"; }
 	else { return null; }
-})()
+})();
+});
+test(2)
