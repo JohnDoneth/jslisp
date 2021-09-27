@@ -41,7 +41,7 @@ if (program.args.length != 0) {
     } else {
       console.log(`JS:\n${javaScript}`);
 
-      console.log(eval(javaScript));
+      console.log(globalThis.eval(javaScript));
     }
   } catch (err) {
     console.error(err);
@@ -68,7 +68,7 @@ if (program.args.length == 0 || options.repl) {
 
       if (compileResult) {
         try {
-          console.log(eval(compileResult));
+          console.log(globalThis.eval(compileResult));
         } catch (e) {
           console.error(
             `Invalid JavaScript generated. Error during evaluation: ${e}`

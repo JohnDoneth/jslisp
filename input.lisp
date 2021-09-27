@@ -62,6 +62,10 @@
   "Check if x is a string."
   (quasiquote (== (typeof (unquote x)) "string")))
 
+(macro undefined? [x] 
+  "Check if x is undefined."
+  (quasiquote (== (typeof (unquote x)) "undefined")))
+
 (macro assert! [condition message]
      (quasiquote 
         (if (! (unquote condition))
@@ -75,50 +79,60 @@
     (console.log body)
     (quasiquote (const (unquote name) (fn (unquote args) (unquote ...body)))))
 
-(defn log [x] 
-    (console.log x) 
-    (console.log x))
+;; (defn log [x] 
+;;     (console.log x) 
+;;     (console.log x))
 
 
-(log (string? "hello"))
-(log (string? {:a "2"}))
+;; (log (string? "hello"))
+;; (log (string? {:a "2"}))
 
 
-(defn x [a b ...rest] rest)
+;; (defn x [a b ...rest] rest)
 
 ;(defn "hi" [a b ...rest] rest)
 
 
 ;(assert! false "message")
 
-(log (x 1 2))
-(log (x 1 2 3 4))
+; Functions
+(defn print [x] (console.log x))
+
+(print [1 2]) ; Arrays
+(print {:a 42}) ; Objects
  
-
-(const y "hello")
-
+; Case Statements
 (defn test [x] 
     (case (typeof x)
         "number" "it's a number!"
         "string" "it's a string!"
         ))   
     
-(test 2)
-(test "string")
+(print (test 2))
+(print (test "string"))
 
-(const z 42)
+; Macros
+(macro string? [x] 
+  "Check if x is a string."
+  (quasiquote (== (typeof (unquote x)) "string")))
 
-(case z
-    1 "one!"
-    2 "two!"
-    42 "fourty-two!")
+(print (string? "I'm a string!"))
 
 
-(macro odd? [x] 
-    (console.log x)
-    (quote (!= (% x.value 2) 0)))
 
-(odd? 2)
+
+
+
+
+
+
+
+
+;; (macro odd? [x] 
+;;     (console.log x)
+;;     (quote (!= (% x.value 2) 0)))
+
+;; (odd? 2)
 
 ;; (== (int? 42) false)
 

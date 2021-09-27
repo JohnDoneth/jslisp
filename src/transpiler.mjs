@@ -25,6 +25,8 @@ const SPECIAL_FORMS = [
   "case",
   "const",
   "continue",
+  "global",
+  "set",
   "do",
   "fn",
   "if",
@@ -320,6 +322,14 @@ const compileSpecialForm = (form, env) => {
     let second = form.value[1].value;
     let [third, newEnv] = compile(form.value[2], env);
     return [`const ${second} = ${third}`, newEnv];
+  } else if (first == "global") {
+    let second = form.value[1].value;
+    let [third, newEnv] = compile(form.value[2], env);
+    return [`${second} = ${third}`, newEnv];
+  } else if (first == "set") {
+    let second = form.value[1].value;
+    let [third, newEnv] = compile(form.value[2], env);
+    return [`${second} = ${third}`, newEnv];
   } else if (first == "fn") {
     return compileFunction(form.value.slice(1), env);
   } else if (first == "if") {

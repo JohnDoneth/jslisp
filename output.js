@@ -1,15 +1,8 @@
-const log = (function(x) {
-	console.log(x);
+const print = (function(x) {
 	return console.log(x);
 });
-log((typeof("hello") == "string"));
-log((typeof({a: "2"}) == "string"));
-const x = (function(a, b, ...rest) {
-	return rest;
-});
-log(x(1, 2));
-log(x(1, 2, 3, 4));
-const y = "hello";
+print([1, 2]);
+print({a: 42});
 const test = (function(x) {
 	return (function () {
 	let __dispatch__ = typeof(x);
@@ -18,4 +11,6 @@ const test = (function(x) {
 	else { return null; }
 })();
 });
-test(2)
+print(test(2));
+print(test("string"));
+print((typeof("I'm a string!") == "string"))
