@@ -316,43 +316,57 @@ const compileFunction = (list, env) => {
 };
 
 const compileImportItem = (item, toplevel) => {
+  //console.log({ item: item });
 
   if (item.type == "Array") {
-    let result = []
+    let result = [];
     for (let index = 0; index < item.value.length; index++) {
       const element = item.value[index];
 
       if (item.value[index + 1]?.value == "as") {
-
         const alias = compile(item.value[index + 2])[0];
 
-        result.push(`${compileImportItem(element, false)} as ${alias}`)
+        result.push(`${compileImportItem(element, false)} as ${alias}`);
         index += 2;
       } else {
-        result.push(compileImportItem(element, false))
+        result.push(compileImportItem(element, false));
       }
     }
 
+    //console.log({ result: result });
+
     if (toplevel) {
-      return `{ ${result.join(", ")} }`;
+      return `${result.join(", ")}`;
     } else {
       return `{ ${result.join(", ")} }`;
     }
   }
 
   return `${item.value}`;
-}
+};
 
 const compileImportBody = (imports, env) => {
+  let items = [];
 
-  console.log({imports: imports})
+  for (let index = 0; index < imports.length; index++) {
+    const element = imports[index];
 
-  if (imports.length > 2) {
-    imports.splice(-2)
+    if (element.value == "from") {
+      break;
+    } else {
+      items.push(element);
+    }
   }
 
-  return [compileImportItem(imports[0], true), env];
-}
+  items = {
+    type: "Array",
+    value: items,
+  };
+
+  //console.log({ items: JSON.stringify(items) });
+
+  return [compileImportItem(items, true), env];
+};
 
 const compileSpecialForm = (form, env) => {
   let first = form.value[0].value;
@@ -405,35 +419,24 @@ const compileSpecialForm = (form, env) => {
 
     return [`(function (){ ${body}\n })()`, env];
   } else if (first == "import") {
-    
     const args = form.value.slice(1);
 
     if (args.length == 1) {
       return [`import "${args[0].value}";`, env];
     }
 
-    console.log({len: args.length})
-
+    //console.log({ len: args.length });
 
     let from = ";";
     if (args.length >= 3) {
       const module = args.splice(-1)[0];
       const _ = args.splice(-1);
-
-      from = `from ${compile(module, env)[0]};`
+      from = `from ${compile(module, env)[0]};`;
     }
 
-    console.log(args[0])
-
-    let body = null;
-    if (args[0].type == "Array") {
-      body = compileImportBody(args, env)[0];
-    } else {
-      body = compile(args[0], env)[0];
-    }
+    let body = compileImportBody(args, env)[0];
 
     return ["import " + body + " " + from, env];
-
   } else if (first == "macro") {
     assert(
       form.value.length >= 3,

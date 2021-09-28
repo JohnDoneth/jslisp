@@ -638,7 +638,7 @@ test("import - import the default export", (t) => {
 
 test("import - default import and a namespace", (t) => {
   let [output, _env] = compileSource(`
-    (import myDefault [* :as myModule] :from "/modules/my-module.js")
+    (import myDefault * :as myModule :from "/modules/my-module.js")
   `);
 
   t.is(output, `import myDefault, * as myModule from "/modules/my-module.js";`);
@@ -681,7 +681,10 @@ test("import - import an export with a more convenient alias", (t) => {
     (import [reallyReallyLongModuleExportName :as shortName] :from "module")
   `);
 
-  t.is(output, `import { reallyReallyLongModuleExportName as shortName } from "module";`);
+  t.is(
+    output,
+    `import { reallyReallyLongModuleExportName as shortName } from "module";`
+  );
 });
 
 test("import - rename multiple exports during import", (t) => {
@@ -692,7 +695,10 @@ test("import - rename multiple exports during import", (t) => {
     ] :from "module")
   `);
 
-  t.is(output, `import { reallyReallyLongModuleExportName as shortName, anotherLongModuleName as short } from "module";`);
+  t.is(
+    output,
+    `import { reallyReallyLongModuleExportName as shortName, anotherLongModuleName as short } from "module";`
+  );
 });
 
 test("import - import a module for its side effects only", (t) => {
@@ -703,5 +709,5 @@ test("import - import a module for its side effects only", (t) => {
   t.is(output, `import "module";`);
 });
 
-// TODO - support dynamic imports. Function syntax 
+// TODO - support dynamic imports. Function syntax
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_import
