@@ -627,3 +627,81 @@ test("quasiquote works", (t) => {
 
   t.is(output, `Number.isInteger(42)`);
 });
+
+test("import - import the default export", (t) => {
+  let [output, _env] = compileSource(`
+    (import myDefault :from "module")
+  `);
+
+  t.is(output, `import myDefault from "module";`);
+});
+
+test("import - default import and a namespace", (t) => {
+  let [output, _env] = compileSource(`
+    (import myDefault [* :as myModule] :from "/modules/my-module.js")
+  `);
+
+  t.is(output, `import myDefault, * as myModule from "/modules/my-module.js";`);
+});
+
+test("import - default import with specific, named imports", (t) => {
+  let [output, _env] = compileSource(`
+    (import myDefault [foo bar] :from "/modules/my-module.js")
+  `);
+
+  t.is(output, `import myDefault, { foo, bar } from "/modules/my-module.js";`);
+});
+
+test("import - import an entire module's contents", (t) => {
+  let [output, _env] = compileSource(`
+    (import * :as myModule :from "module")
+  `);
+
+  t.is(output, `import * as myModule from "module";`);
+});
+
+test("import - import a single export from a module", (t) => {
+  let [output, _env] = compileSource(`
+    (import [myExport] :from "module")
+  `);
+
+  t.is(output, `import { myExport } from "module";`);
+});
+
+test("import - import multiple exports from module", (t) => {
+  let [output, _env] = compileSource(`
+    (import [foo bar] :from "module")
+  `);
+
+  t.is(output, `import { foo, bar } from "module";`);
+});
+
+test("import - import an export with a more convenient alias", (t) => {
+  let [output, _env] = compileSource(`
+    (import [reallyReallyLongModuleExportName :as shortName] :from "module")
+  `);
+
+  t.is(output, `import { reallyReallyLongModuleExportName as shortName } from "module";`);
+});
+
+test("import - rename multiple exports during import", (t) => {
+  let [output, _env] = compileSource(`
+    (import [
+      reallyReallyLongModuleExportName :as shortName
+      anotherLongModuleName :as short
+    ] :from "module")
+  `);
+
+  t.is(output, `import { reallyReallyLongModuleExportName as shortName, anotherLongModuleName as short } from "module";`);
+});
+
+test("import - import a module for its side effects only", (t) => {
+  let [output, _env] = compileSource(`
+    (import "module")
+  `);
+
+  t.is(output, `import "module";`);
+});
+
+// TODO - support dynamic imports. Function syntax 
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_import

@@ -315,6 +315,45 @@ const compileFunction = (list, env) => {
   return [`(function(${args}) {\n${body}})`, env];
 };
 
+const compileImportItem = (item, toplevel) => {
+
+  if (item.type == "Array") {
+    let result = []
+    for (let index = 0; index < item.value.length; index++) {
+      const element = item.value[index];
+
+      if (item.value[index + 1]?.value == "as") {
+
+        const alias = compile(item.value[index + 2])[0];
+
+        result.push(`${compileImportItem(element, false)} as ${alias}`)
+        index += 2;
+      } else {
+        result.push(compileImportItem(element, false))
+      }
+    }
+
+    if (toplevel) {
+      return `{ ${result.join(", ")} }`;
+    } else {
+      return `{ ${result.join(", ")} }`;
+    }
+  }
+
+  return `${item.value}`;
+}
+
+const compileImportBody = (imports, env) => {
+
+  console.log({imports: imports})
+
+  if (imports.length > 2) {
+    imports.splice(-2)
+  }
+
+  return [compileImportItem(imports[0], true), env];
+}
+
 const compileSpecialForm = (form, env) => {
   let first = form.value[0].value;
 
@@ -366,7 +405,35 @@ const compileSpecialForm = (form, env) => {
 
     return [`(function (){ ${body}\n })()`, env];
   } else if (first == "import") {
-    throw { error: "Unimplemented special form" };
+    
+    const args = form.value.slice(1);
+
+    if (args.length == 1) {
+      return [`import "${args[0].value}";`, env];
+    }
+
+    console.log({len: args.length})
+
+
+    let from = ";";
+    if (args.length >= 3) {
+      const module = args.splice(-1)[0];
+      const _ = args.splice(-1);
+
+      from = `from ${compile(module, env)[0]};`
+    }
+
+    console.log(args[0])
+
+    let body = null;
+    if (args[0].type == "Array") {
+      body = compileImportBody(args, env)[0];
+    } else {
+      body = compile(args[0], env)[0];
+    }
+
+    return ["import " + body + " " + from, env];
+
   } else if (first == "macro") {
     assert(
       form.value.length >= 3,

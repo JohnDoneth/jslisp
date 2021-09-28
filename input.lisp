@@ -105,8 +105,8 @@
 (defn test [x] 
     (case (typeof x)
         "number" "it's a number!"
-        "string" "it's a string!"
-        ))   
+        "string" "it's a string!"))
+           
     
 (print (test 2))
 (print (test "string"))
