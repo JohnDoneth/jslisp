@@ -711,5 +711,3 @@ test("import - import a module for its side effects only", (t) => {
 
 // TODO - support dynamic imports. Function syntax
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_import
-
-

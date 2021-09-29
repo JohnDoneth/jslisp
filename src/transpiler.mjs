@@ -1,6 +1,6 @@
 import assert from "assert";
 import { manyFormsParser } from "./parser.mjs";
-import { mangle } from "./mangle.mjs";
+import { mangle, unmangle } from "./mangle.mjs";
 
 // Operators reserved by the compiler.
 const OPERATORS = [
@@ -98,6 +98,27 @@ export const quasiquoteMacro = (form, unquote) => {
     };
   }
 
+  function symbolWrapper(form) {
+    console.log({ v: form });
+
+    let v;
+    if (unquote) {
+      v = form.value;
+    } else {
+      v = `"${form.value}"`;
+    }
+
+    return {
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: form.type },
+        { type: "Keyword", value: "value" },
+        { type: form.type, value: v },
+      ],
+    };
+  }
+
   function containerWrap(form) {
     const newForm = {
       type: form.type,
@@ -153,7 +174,7 @@ export const quasiquoteMacro = (form, unquote) => {
   } else if (form.type === "Number") {
     return wrapper(form);
   } else if (form.type === "Symbol") {
-    return stringWrapper(form);
+    return symbolWrapper(form);
   } else if (form.type === "Keyword") {
     return stringWrapper(form);
   } else if (form.type === "Null") {
@@ -190,6 +211,18 @@ export const quoteMacro = (form) => {
         { type: "String", value: form.type },
         { type: "Keyword", value: "value" },
         { type: form.type, value: `${form.value}` },
+      ],
+    };
+  }
+
+  function symbolWrapper(form) {
+    return {
+      type: "Object",
+      value: [
+        { type: "Keyword", value: "type" },
+        { type: "String", value: form.type },
+        { type: "Keyword", value: "value" },
+        { type: form.type, value: `"${form.value}"` },
       ],
     };
   }
@@ -245,7 +278,7 @@ export const quoteMacro = (form) => {
   } else if (form.type === "Number") {
     return wrapper(form);
   } else if (form.type === "Symbol") {
-    return stringWrapper(form);
+    return symbolWrapper(form);
   } else if (form.type === "Keyword") {
     return stringWrapper(form);
   } else if (form.type === "Null") {
@@ -278,7 +311,9 @@ const compileMacro = (macro, list, env) => {
   console.log({ macroResult: macroResult });
   //console.log({ compiledMacroResult: compile(macroResult, env) });
 
+  //env.inMacro = true;
   let [output, newEnv] = compile(macroResult, env);
+  //newEnv.inMacro = false;
 
   console.log({ macroOutput: output });
 
@@ -286,7 +321,7 @@ const compileMacro = (macro, list, env) => {
 };
 
 const compileCall = (list, env) => {
-  let first = list.value[0].value;
+  let first = compile(list.value[0], env)[0];
 
   if (env.macros[first]) {
     return compileMacro(env.macros[first], list, env);
@@ -310,7 +345,7 @@ const compileFunction = (list, env) => {
         `Function arguments need to be symbols. Got ${JSON.stringify(arg)}`
       );
 
-      return arg.value;
+      return compile(arg, env)[0];
     })
     .join(", ");
 
@@ -389,15 +424,15 @@ const compileSpecialForm = (form, env) => {
   let first = form.value[0].value;
 
   if (first == "const") {
-    let second = mangle(form.value[1].value);
+    let second = compile(form.value[1], env)[0];
     let [third, newEnv] = compile(form.value[2], env);
     return [`const ${second} = ${third}`, newEnv];
   } else if (first == "global") {
-    let second = form.value[1].value;
+    let second = compile(form.value[1], env)[0];
     let [third, newEnv] = compile(form.value[2], env);
     return [`${second} = ${third}`, newEnv];
   } else if (first == "set") {
-    let second = form.value[1].value;
+    let second = compile(form.value[1], env)[0];
     let [third, newEnv] = compile(form.value[2], env);
     return [`${second} = ${third}`, newEnv];
   } else if (first == "fn") {
@@ -460,7 +495,7 @@ const compileSpecialForm = (form, env) => {
       "macro form requires a name, arguments, and a body."
     );
 
-    const identifier = form.value[1].value;
+    const identifier = compile(form.value[1], env)[0];
 
     const [macroSource, newEnv] = compileFunction(form.value.slice(2), env);
 
@@ -582,7 +617,8 @@ const compileBoolean = (boolean, env) => {
 
 const compileSymbol = (symbol, env) => {
   assert(symbol?.type === "Symbol", `Got ${JSON.stringify(symbol)}`);
-  return [symbol.value, env];
+
+  return [`${symbol.value}`, env];
 };
 
 const compileString = (string, env) => {
@@ -684,6 +720,7 @@ export const compile = (ast, env) => {
 
 export const defaultEnvironment = () => {
   return {
+    inMacro: false,
     macros: {
       quote: quoteMacro,
       quasiquote: quasiquoteMacro,
@@ -701,6 +738,8 @@ export const compileSource = (source, env) => {
 
   if (!parseResult.isError) {
     let topLevelForms = parseResult.result;
+
+    console.log(JSON.stringify(topLevelForms));
 
     let result2 = topLevelForms.reduce(
       function (prev, current) {

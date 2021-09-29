@@ -49,7 +49,9 @@
   "Check if x is undefined."
   (quasiquote (== (typeof (unquote x)) "undefined")))
 
-
+(const macros 
+    [bool? object? number? function? int? float? array? string? undefined?])
+     
 
 (javascript "export {
     bool_3f

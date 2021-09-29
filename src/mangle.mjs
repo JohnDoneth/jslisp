@@ -1,5 +1,5 @@
 const mangleChar = (char) => {
-  if (/[a-zA-Z0-9_]/.test(char)) {
+  if (/[a-zA-Z0-9_.]/.test(char)) {
     return char;
   } else if (char == "-") {
     return "_";
@@ -11,7 +11,7 @@ const mangleChar = (char) => {
 const unmangleChar = (char) => {
   console.log(char);
 
-  if (/[a-zA-Z0-9]/.test(char)) {
+  if (/[a-zA-Z0-9.]/.test(char)) {
     return char;
   } else if (char == "_") {
     return "-";
