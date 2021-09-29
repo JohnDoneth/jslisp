@@ -76,3 +76,11 @@ test("case - defaults to null if no matches occur with an even number of argumen
 
   t.is(result, null);
 });
+
+test("javascript - emits javascript as-is into the resulting source code.", (t) => {
+  const result = run(`
+    (javascript "2 + 2")
+  `);
+
+  t.is(result, 4);
+});

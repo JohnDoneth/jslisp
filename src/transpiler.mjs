@@ -25,15 +25,15 @@ const SPECIAL_FORMS = [
   "case",
   "const",
   "continue",
-  "global",
-  "set",
   "do",
   "fn",
+  "global",
   "if",
   "import",
   "let",
   "macro",
   "macroexpand",
+  "set",
   "throw",
   "while",
 ];
@@ -44,6 +44,20 @@ const pairsOf = (reducable) => {
     return result;
   }, []);
   return pairs;
+};
+
+export const javaScriptMacro = (input) => {
+  assert(
+    input?.type === "String",
+    `The argument to the 'javascript' macro should be a string. Got ${JSON.stringify(
+      input
+    )}`
+  );
+
+  return {
+    type: "JavaScript",
+    value: input.value,
+  };
 };
 
 // Like `quote` but supports `unquote`'ing (interpolating) expressions inside.
@@ -260,10 +274,12 @@ const compileMacro = (macro, list, env) => {
 
   const macroResult = macro(...args);
 
-  //console.log({ macroResult: macroResult });
+  console.log({ macroResult: macroResult });
   //console.log({ compiledMacroResult: compile(macroResult, env) });
 
   let [output, newEnv] = compile(macroResult, env);
+
+  console.log({ macroOutput: output });
 
   return [`${output}`, newEnv];
 };
@@ -658,6 +674,8 @@ export const compile = (ast, env) => {
     return compileArray(ast, env);
   } else if (ast?.type === "Keyword") {
     return compileKeyword(ast, env);
+  } else if (ast?.type === "JavaScript") {
+    return [ast.value, env];
   } else {
     return compileSymbol(ast, env);
   }
@@ -668,6 +686,7 @@ export const defaultEnvironment = () => {
     macros: {
       quote: quoteMacro,
       quasiquote: quasiquoteMacro,
+      javascript: javaScriptMacro,
     },
   };
 };
