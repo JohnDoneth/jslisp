@@ -1,5 +1,6 @@
-import { manyFormsParser } from "./parser.mjs";
 import assert from "assert";
+import { manyFormsParser } from "./parser.mjs";
+import { mangle } from "./mangle.mjs";
 
 // Operators reserved by the compiler.
 const OPERATORS = [
@@ -388,7 +389,7 @@ const compileSpecialForm = (form, env) => {
   let first = form.value[0].value;
 
   if (first == "const") {
-    let second = form.value[1].value;
+    let second = mangle(form.value[1].value);
     let [third, newEnv] = compile(form.value[2], env);
     return [`const ${second} = ${third}`, newEnv];
   } else if (first == "global") {
