@@ -49,13 +49,27 @@ if (program.args.length != 0) {
 }
 
 if (program.args.length == 0 || options.repl) {
+
+  let history = []
+  try {
+    const historyData = fs.readFileSync(".history", "utf8");
+    if (historyData) {
+      history = JSON.parse(historyData)
+    }
+  } catch {}
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
     prompt: "> ",
+    history: history
   });
 
   rl.prompt();
+
+  rl.on('history', (history) => {
+    fs.writeFileSync(".history", JSON.stringify(history));
+  });
 
   rl.on("line", (line) => {
     try {

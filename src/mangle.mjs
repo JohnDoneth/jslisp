@@ -9,7 +9,7 @@ const mangleChar = (char) => {
 };
 
 const unmangleChar = (char) => {
-  console.log(char);
+  console.log(char)
 
   if (/[a-zA-Z0-9.]/.test(char)) {
     return char;
@@ -19,8 +19,6 @@ const unmangleChar = (char) => {
 };
 
 const mangle = (symbol) => {
-  //symbol = symbol.replace("-", "_");
-
   symbol = Array.from(symbol).reduce(function (acc, char) {
     return acc + mangleChar(char);
   }, "");
@@ -39,6 +37,7 @@ const unmangle = (symbol) => {
       let chomp = chars[index + 1];
       while (chars[index + 1] != "_" && chars[index + 1]) {
         index += 1;
+        console.log({chomp: chomp})
         chomp = chomp + chars[index + 1];
       }
 
@@ -47,6 +46,9 @@ const unmangle = (symbol) => {
       x = x + unmangleChar(char);
     }
   }
+
+  console.log(x)
+
 
   return x;
 };

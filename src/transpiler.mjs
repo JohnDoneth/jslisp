@@ -99,13 +99,13 @@ export const quasiquoteMacro = (form, unquote) => {
   }
 
   function symbolWrapper(form) {
-    console.log({ v: form });
+    //console.log({ v: form });
 
     let v;
     if (unquote) {
       v = form.value;
     } else {
-      v = `"${form.value}"`;
+      v = `${form.value}`;
     }
 
     return {
@@ -222,7 +222,7 @@ export const quoteMacro = (form) => {
         { type: "Keyword", value: "type" },
         { type: "String", value: form.type },
         { type: "Keyword", value: "value" },
-        { type: form.type, value: `"${form.value}"` },
+        { type: form.type, value: `${form.value}` },
       ],
     };
   }
@@ -308,7 +308,7 @@ const compileMacro = (macro, list, env) => {
 
   const macroResult = macro(...args);
 
-  console.log({ macroResult: macroResult });
+  //console.log({ macroResult: macroResult });
   //console.log({ compiledMacroResult: compile(macroResult, env) });
 
   //env.inMacro = true;
@@ -337,6 +337,8 @@ const compileCall = (list, env) => {
 
 const compileFunction = (list, env) => {
   let args = list[0].value;
+
+  console.log(args)
 
   args = args
     .map(function (arg) {
@@ -495,7 +497,7 @@ const compileSpecialForm = (form, env) => {
       "macro form requires a name, arguments, and a body."
     );
 
-    const identifier = compile(form.value[1], env)[0];
+    const identifier = unmangle(compile(form.value[1], env)[0]);
 
     const [macroSource, newEnv] = compileFunction(form.value.slice(2), env);
 
@@ -618,7 +620,7 @@ const compileBoolean = (boolean, env) => {
 const compileSymbol = (symbol, env) => {
   assert(symbol?.type === "Symbol", `Got ${JSON.stringify(symbol)}`);
 
-  return [`${symbol.value}`, env];
+  return [`${mangle(symbol.value)}`, env];
 };
 
 const compileString = (string, env) => {
@@ -739,7 +741,7 @@ export const compileSource = (source, env) => {
   if (!parseResult.isError) {
     let topLevelForms = parseResult.result;
 
-    console.log(JSON.stringify(topLevelForms));
+    //console.log(JSON.stringify(topLevelForms));
 
     let result2 = topLevelForms.reduce(
       function (prev, current) {

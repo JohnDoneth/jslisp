@@ -192,6 +192,8 @@ test("it does not allow lists without a symbol at the start", (t) => {
 test("it registers macros in the environment", (t) => {
   const [_result, env] = compileSource("(macro test-macro [] 42)");
 
+  console.log(env)
+
   t.is(typeof env.macros["test-macro"], "function");
 });
 
@@ -618,8 +620,7 @@ test("quote is the inverse of compile with arrays", (t) => {
 test("quasiquote works", (t) => {
   let [output, _env] = compileSource(
     `
-  (macro int? [value] 
-    (quasiquote (Number.isInteger (unquote value))))
+  (macro int? [value] (quasiquote (Number.isInteger (unquote value))))
 
   (int? 42)
   `
